@@ -1,5 +1,6 @@
 #define _XOPEN_SOURCE 600
 
+#include <dirent.h>
 #include <termios.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -232,7 +233,7 @@ void render(const char *prompt, const char *buffer, int cursor_pos,
     if (*prev_lines_out < 1) *prev_lines_out = 1;
 }
 
-char *readline(char **paths, char *prompt)
+char *readline(char **paths, const char *prompt)
 {
 	int bufsize = RL_BUFSIZE;
 	int position = 0;
@@ -247,10 +248,10 @@ char *readline(char **paths, char *prompt)
 
 	buffer[0] = '\0';
 	while (1) {
-		int c = getchar(); // read a character
+		// Read a character
+		int c = getchar();
 		int buf_len = strlen(buffer);
 
-		// check each character user has input
 		switch (c) {
 			case EOF:
 				exit(EXIT_SUCCESS);
@@ -267,11 +268,8 @@ char *readline(char **paths, char *prompt)
 						// replace !! with the last command
 						char *pos = strstr(buffer, "!!");
 						char tmp[1024];
-						snprintf(tmp, sizeof(tmp), "%.*s%s%s",
-								 (int)(pos - buffer), buffer,
-								 last_command,
-								 pos + 2);
-						
+						snprintf(tmp, sizeof(tmp), "%.*s%s%s", (int)(pos - buffer), buffer,
+								 last_command, pos + 2);
 						/* Copy back or realloc to fit */
 						buffer = realloc(buffer, strlen(tmp) + 1);
 						strcpy(buffer, tmp);
@@ -377,8 +375,7 @@ char **modifyargs(char **args)
 	int num_arg = 0;
 
 	// check if command is ls, diff, or grep, if so, add --color=auto to the arguments
-	// this is to make ls, diff, and grep have color without user typing it
-	// this is to make the shell more user friendly
+	// so they have color without user typing it
 	while (args[num_arg] != NULL) {
 		num_arg++;
 	}
