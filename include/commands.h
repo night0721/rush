@@ -6,4 +6,6 @@ bool is_builtin(char *command);
 int execute(char **args, int fd, int options);
 int execute_pipe(char ***args);
 
+extern char *builtin_cmds[];
+
 #endif
