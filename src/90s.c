@@ -143,50 +143,71 @@ int prompt_visible_length(const char *str)
 void highlight(char *buffer, char **paths)
 {
 	char *cmd_part = strchr(buffer, ' ');
-	char *command_without_arg = NULL;
-	int cmd_len = 0;
-	bool valid;
+	size_t cmd_len = cmd_part ? (size_t)(cmd_part - buffer) : strlen(buffer);
 
-	if (cmd_part != NULL) {
-		cmd_len = cmd_part - buffer;
-		char *cmd = memalloc(cmd_len + 1);
-		command_without_arg = memalloc(cmd_len + 1);
-		memcpy(cmd, buffer, cmd_len);
-		cmd[cmd_len] = '\0';
-		memcpy(command_without_arg, cmd, cmd_len + 1);
-		cmd[cmd_len] = '\0';
-		command_without_arg[cmd_len] = '\0';
-		valid = find_command(paths, cmd);
-		free(cmd);
-	} else {
-		valid = find_command(paths, buffer);
+	char cmd[cmd_len + 1];
+	memcpy(cmd, buffer, cmd_len);
+	cmd[cmd_len] = '\0';
+	bool valid = find_command(paths, cmd);
+
+	/* green if valid, red if invalid */
+    const char *cmd_color = valid ? "\x1b[32m" : "\x1b[31m";
+
+	/* Print the colored command, then switch to white for args */
+	printf("%s%s\x1b[37m", cmd_color, cmd);
+
+	/* Walk the rest token by token, underline each token that has existing path */
+	char *p = buffer + cmd_len;
+	while (*p) {
+		if (*p == ' ' || *p == '\t') {
+			putchar(*p);
+			p++;
+			continue;
+		}
+
+		/* Find end of token (next whitespace) */
+		char *start = p;
+		while (*p && *p != ' ' && *p != '\t')
+			p++;
+		int tok_len = (int)(p - start);
+
+		bool exists = false;
+		if (tok_len > 0 && tok_len < PATH_MAX) {
+			char tok[PATH_MAX];
+			memcpy(tok, start, tok_len);
+			tok[tok_len] = '\0';
+
+			const char *check_path = tok;
+			char expanded[PATH_MAX];
+
+			if (tok[0] == '~') {
+				char *home = getenv("HOME");
+				if (home) {
+					snprintf(expanded, sizeof(expanded), "%s%s",
+							 home, tok + 1);
+					check_path = expanded;
+				}
+			}
+
+			if (access(check_path, F_OK) == 0)
+				exists = true;
+		}
+
+		if (exists)
+			printf("\033[1m\033[4m%.*s\033[22m\033[24m", tok_len, start);
+		else
+			printf("%.*s", tok_len, start);
 	}
 
-	if (valid) {
-		if (command_without_arg != NULL) {
-			buffer += cmd_len;
-			printf("\x1b[32m%s\x1b[37m%s\x1b[m", command_without_arg, buffer); // print green as valid command, but only color the command, not the arguments
-			buffer -= cmd_len;
-		} else {
-			printf("\x1b[32m%s\x1b[m", buffer); // print green as valid command
-		}
-	} else {
-		if (command_without_arg != NULL) {
-			buffer += cmd_len;
-			printf("\x1b[31m%s\x1b[37m%s\x1b[m", command_without_arg, buffer); // print red as invalid command, but only color the command, not the arguments
-			buffer -= cmd_len;
-		} else {
-			printf("\x1b[31m%s\x1b[m", buffer); // print red as invalid command
-		}
-	}
+	printf("\x1b[m");
 	fflush(stdout);
-	free(command_without_arg);
 }
 
 void render(const char *prompt, const char *buffer, int cursor_pos,
                  int *prev_lines_out, char **paths) {
     int width = get_terminal_width();
-    int prompt_visible = prompt_visible_length(prompt); // strip ANSI for counting
+	// strip ANSI for counting
+    int prompt_visible = prompt_visible_length(prompt);
 
     // Move cursor up to the first line if we were multiline
     if (*prev_lines_out > 1) {
@@ -522,4 +543,4 @@ int main(int argc, char **argv)
 	free(paths);
 	change_terminal_attribute(0); // change back to default settings
 	return EXIT_SUCCESS;
-}   
+}

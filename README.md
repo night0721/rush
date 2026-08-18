@@ -17,6 +17,7 @@ Minimalist, customizable shell written in C99 with syntax highlighting and no de
 - autojump to directories
 - stdin, stdout, stderr redirect
 - Background jobs
+- Underline file path if it exists in system
 
 ## Built in commands
 - cd
@@ -32,7 +33,6 @@ Minimalist, customizable shell written in C99 with syntax highlighting and no de
 - Tab completion
 - Git integration
 - Allow arguments with space in double quotes
-- Underline file path if it exists `echo -e "\033[4mabc\033[0m"`
 - Aliases
 
 # Usage
