@@ -14,7 +14,8 @@ static alias_t *aliases = NULL;
 static int alias_count = 0;
 static int alias_capacity = 0;
 
-static char *trim_str(char *str) {
+static char *trim_str(char *str)
+{
 	while (*str == ' ' || *str == '\t') str++;
 	if (*str == '\0') return str;
 	char *end = str + strlen(str) - 1;
@@ -89,7 +90,7 @@ char *expand_segment(const char *segment)
 
 	for (int i = 0; i < alias_count; i++) {
 		if ((int)strlen(aliases[i].name) == word_len && strncmp(start, aliases[i].name, word_len) == 0) {
-			// hit! 替換 alias
+			// Swap
 			char *new_seg = malloc(strlen(aliases[i].value) + strlen(end) + 1);
 			if (!new_seg) { perror("90s: malloc"); exit(EXIT_FAILURE); }
 			sprintf(new_seg, "%s%s", aliases[i].value, end);
