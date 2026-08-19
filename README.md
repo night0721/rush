@@ -18,6 +18,7 @@ Minimalist, customizable shell written in C99 with syntax highlighting and no de
 - stdin, stdout, stderr redirect
 - Background jobs
 - Underline file path if it exists in system
+- Aliases
 
 ## Built in commands
 - cd
@@ -33,7 +34,6 @@ Minimalist, customizable shell written in C99 with syntax highlighting and no de
 - Tab completion
 - Git integration
 - Allow arguments with space in double quotes
-- Aliases
 
 # Usage
 ```sh
