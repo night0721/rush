@@ -16,6 +16,7 @@
 #include "constants.h"
 #include "history.h"
 #include "commands.h"
+#include "alias.h"
 
 void *memalloc(size_t size)
 {
@@ -28,17 +29,17 @@ void *memalloc(size_t size)
 }
 
 int get_terminal_width(void) {
-    struct winsize ws;
-    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0)
-        return 80; // fallback
-    return ws.ws_col;
+	struct winsize ws;
+	if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0)
+		return 80; // fallback
+	return ws.ws_col;
 }
 
 void change_terminal_attribute(int option)
 {  
 	static struct termios oldt, newt;
-	tcgetattr(STDIN_FILENO, &oldt);
 	if (option) {
+		tcgetattr(STDIN_FILENO, &oldt);
 		newt = oldt;
 		newt.c_lflag &= ~(ICANON | ECHO); // allows getchar without pressing enter key and echoing the character twice
 		tcsetattr(STDIN_FILENO, TCSANOW, &newt); // set settings to stdin
@@ -151,7 +152,7 @@ void highlight(char *buffer, char **paths)
 	bool valid = find_command(paths, cmd);
 
 	/* green if valid, red if invalid */
-    const char *cmd_color = valid ? "\x1b[32m" : "\x1b[31m";
+	const char *cmd_color = valid ? "\x1b[32m" : "\x1b[31m";
 
 	/* Print the colored command, then switch to white for args */
 	printf("%s%s\x1b[37m", cmd_color, cmd);
@@ -184,7 +185,7 @@ void highlight(char *buffer, char **paths)
 				char *home = getenv("HOME");
 				if (home) {
 					snprintf(expanded, sizeof(expanded), "%s%s",
-							 home, tok + 1);
+							home, tok + 1);
 					check_path = expanded;
 				}
 			}
@@ -204,54 +205,54 @@ void highlight(char *buffer, char **paths)
 }
 
 void render(const char *prompt, const char *buffer, int cursor_pos,
-                 int *prev_lines_out, char **paths) {
-    int width = get_terminal_width();
+		int *prev_lines_out, char **paths) {
+	int width = get_terminal_width();
 	// strip ANSI for counting
-    int prompt_visible = prompt_visible_length(prompt);
+	int prompt_visible = prompt_visible_length(prompt);
 
-    // Move cursor up to the first line if we were multiline
-    if (*prev_lines_out > 1) {
-        printf("\033[%dA", *prev_lines_out - 1);  // move up
-    }
-    printf("\r");  // go to start of line
+	// Move cursor up to the first line if we were multiline
+	if (*prev_lines_out > 1) {
+		printf("\033[%dA", *prev_lines_out - 1);  // move up
+	}
+	printf("\r");  // go to start of line
 
-    // Clear all lines we might have used
-    for (int i = 0; i < *prev_lines_out; i++) {
-        printf("\033[2K");  // clear entire line
-        if (i < *prev_lines_out - 1) printf("\n");
-    }
+	// Clear all lines we might have used
+	for (int i = 0; i < *prev_lines_out; i++) {
+		printf("\033[2K");  // clear entire line
+		if (i < *prev_lines_out - 1) printf("\n");
+	}
 
-    // Move back up to first line
-    if (*prev_lines_out > 1) {
-        printf("\033[%dA", *prev_lines_out - 1);
-    }
+	// Move back up to first line
+	if (*prev_lines_out > 1) {
+		printf("\033[%dA", *prev_lines_out - 1);
+	}
 
-    printf("\r");
+	printf("\r");
 
-    // Print prompt + highlighted buffer
-    printf("%s", prompt);
-    highlight(buffer, paths);  // your existing highlight function
+	// Print prompt + highlighted buffer
+	printf("%s", prompt);
+	highlight(buffer, paths);  // your existing highlight function
 
-    // Calculate where cursor should be
-    int total_visible = prompt_visible + cursor_pos;
-    int target_line = total_visible / width;
-    int target_col = total_visible % width;
+	// Calculate where cursor should be
+	int total_visible = prompt_visible + cursor_pos;
+	int target_line = total_visible / width;
+	int target_col = total_visible % width;
 
-    // Move cursor to correct position
-    printf("\r");
-    if (target_line > 0) {
-        printf("\033[%dB", target_line);  // move down
-    }
-    if (target_col > 0) {
-        printf("\033[%dC", target_col);   // move right
-    }
+	// Move cursor to correct position
+	printf("\r");
+	if (target_line > 0) {
+		printf("\033[%dB", target_line);  // move down
+	}
+	if (target_col > 0) {
+		printf("\033[%dC", target_col);   // move right
+	}
 
-    fflush(stdout);
+	fflush(stdout);
 
-    // Update prev_lines for next render
-    int new_total = prompt_visible + strlen(buffer);
-    *prev_lines_out = new_total / width + (new_total % width ? 1 : 0);
-    if (*prev_lines_out < 1) *prev_lines_out = 1;
+	// Update prev_lines for next render
+	int new_total = prompt_visible + strlen(buffer);
+	*prev_lines_out = new_total / width + (new_total % width ? 1 : 0);
+	if (*prev_lines_out < 1) *prev_lines_out = 1;
 }
 
 char *readline(char **paths, const char *prompt)
@@ -277,11 +278,11 @@ char *readline(char **paths, const char *prompt)
 			case EOF:
 				exit(EXIT_SUCCESS);
 
-			// Enter
+				// Enter
 			case '\n':
 				buffer[buf_len] = '\0';
 				printf("\n");
-				
+
 				// Check if command includes !!
 				if (strstr(buffer, "!!") != NULL) {
 					char *last_command = read_command(1);
@@ -290,11 +291,11 @@ char *readline(char **paths, const char *prompt)
 						char *pos = strstr(buffer, "!!");
 						char tmp[1024];
 						snprintf(tmp, sizeof(tmp), "%.*s%s%s", (int)(pos - buffer), buffer,
-								 last_command, pos + 2);
+								last_command, pos + 2);
 						/* Copy back or realloc to fit */
 						buffer = realloc(buffer, strlen(tmp) + 1);
 						strcpy(buffer, tmp);
-/* 						TODO: position += last_command_len - replace_len; */
+						/* 						TODO: position += last_command_len - replace_len; */
 						break;
 					}
 				}
@@ -309,31 +310,31 @@ char *readline(char **paths, const char *prompt)
 
 			case 27: // Arrow keys has three characters, 27, 91, then 65-68
 				if (getchar() == '[') {
-                    int arrow = getchar();
-                    if (arrow == 'A') { // Up - history
-                        char *hist = read_command(1);
-                        if (hist) {
-                            strncpy(buffer, hist, bufsize-1);
-                            buffer[bufsize-1] = '\0';
-                            position = strlen(buffer);
-                        }
-                    } else if (arrow == 'B') { // Down
-                        char *hist = read_command(0);
-                        if (hist) {
-                            strncpy(buffer, hist, bufsize-1);
-                            buffer[bufsize - 1] = '\0';
-                            position = strlen(buffer);
-                        } else {
-                            buffer[0] = '\0';
-                            position = 0;
-                        }
-                    } else if (arrow == 'C') { // Right
-                        if (position < buf_len) position++;
-                    } else if (arrow == 'D') { // Left
-                        if (position > 0) position--;
-                    }
-                }
-                break;
+					int arrow = getchar();
+					if (arrow == 'A') { // Up - history
+						char *hist = read_command(1);
+						if (hist) {
+							strncpy(buffer, hist, bufsize-1);
+							buffer[bufsize-1] = '\0';
+							position = strlen(buffer);
+						}
+					} else if (arrow == 'B') { // Down
+						char *hist = read_command(0);
+						if (hist) {
+							strncpy(buffer, hist, bufsize-1);
+							buffer[bufsize - 1] = '\0';
+							position = strlen(buffer);
+						} else {
+							buffer[0] = '\0';
+							position = 0;
+						}
+					} else if (arrow == 'C') { // Right
+						if (position < buf_len) position++;
+					} else if (arrow == 'D') { // Left
+						if (position > 0) position--;
+					}
+				}
+				break;
 
 			default:
 				if (c > 31 && c < 127) {
@@ -344,14 +345,14 @@ char *readline(char **paths, const char *prompt)
 					} else {
 						// Insert character at the current position
 						memmove(&buffer[position+1], &buffer[position], buf_len - position + 1);
-                        buffer[position] = c;
+						buffer[position] = c;
 					}
 					position++;
 				}
 		}
 
 		render(prompt, buffer, position, &prev_lines, paths);
-		
+
 		// If we have exceeded the buffer, reallocate.
 		if ((strlen(buffer) + 1) >= bufsize) {
 			bufsize += RL_BUFSIZE;
@@ -364,15 +365,79 @@ char *readline(char **paths, const char *prompt)
 	}
 }
 
+void free_args(char **args)
+{
+	if (!args) return;
+	for (int i = 0; args[i] != NULL; i++) {
+		free(args[i]);
+	}
+	free(args);
+}
+
 // split line into arguments
 char **argsplit(char *line)
 {
 	int bufsize = TOK_BUFSIZE, position = 0;
 	char **tokens = memalloc(sizeof(char *) * bufsize);
-	char *token;
+	char *p = line;
 
-	token = strtok(line, TOK_DELIM);
-	while (token != NULL) {
+	while (*p) {
+		// skip leading whitespace
+		while (*p && isspace((unsigned char)*p)) p++;
+		if (!*p) break;
+
+		int tok_cap = strlen(p) + 128; // 128 for ~
+		char *token = memalloc(tok_cap);
+		int tok_pos = 0;
+		bool in_single = false;
+		bool in_double = false;
+
+		while (*p) {
+			// Escape sequences
+			if (!in_single && *p == '\\') {
+				p++;
+				if (*p) token[tok_pos++] = *p++;
+				continue;
+			}
+			// Single quote
+			if (!in_double && *p == '\'') {
+				in_single = !in_single;
+				p++;
+				continue;
+			}
+			// Double quote
+			if (!in_single && *p == '"') {
+				in_double = !in_double;
+				p++;
+				continue;
+			}
+
+			if (*p == '~' && !in_single && !in_double) {
+				// Make sure prev token is space
+				if (tok_pos == 0 || isspace((unsigned char)token[tok_pos-1])) {
+					char *home = getenv("HOME");
+					if (home) {
+						int home_len = strlen(home);
+						if (tok_pos + home_len >= tok_cap) {
+							tok_cap = tok_pos + home_len + 1;
+							token = realloc(token, tok_cap);
+						}
+						memcpy(token + tok_pos, home, home_len);
+						tok_pos += home_len;
+						p++;
+						continue;
+					}
+				}
+			}
+
+			// Create token if not in quote
+			if (!in_single && !in_double && isspace((unsigned char)*p)) {
+				break;
+			}
+			token[tok_pos++] = *p++;
+		}
+		token[tok_pos] = '\0';
+
 		tokens[position] = token;
 		position++;
 
@@ -384,8 +449,6 @@ char **argsplit(char *line)
 				exit(EXIT_FAILURE);
 			}
 		}
-
-		token = strtok(NULL, TOK_DELIM);
 	}
 	tokens[position] = NULL;
 	return tokens;
@@ -406,7 +469,7 @@ char **modifyargs(char **args)
 			for (int j = num_arg; j > i; j--) {
 				args[j + 1] = args[j];
 			}
-			args[i + 1] = "--color=auto";
+			args[i + 1] = strdup("--color=auto");
 			num_arg++;
 		}
 	}
@@ -436,7 +499,7 @@ char ***pipe_argsplit(char *line)
 	char *pipe = strtok(line, "|");
 	while (pipe != NULL) {
 		pipe = trimws(pipe);
-		cmds[num_arg] = strdup(pipe);
+		cmds[num_arg] = expand_segment(pipe);
 		pipe = strtok(NULL, "|");
 		num_arg++;
 	}
@@ -445,9 +508,9 @@ char ***pipe_argsplit(char *line)
 	for (int i = 0; i < num_arg; i++) {
 		char **splitted = argsplit(cmds[i]);
 		cmdv[i] = modifyargs(splitted);
-
 	}
 	cmdv[num_arg] = NULL;
+	for (int i = 0; i < num_arg; i++) free(cmds[i]);
 	free(cmds);
 	return cmdv;
 }
@@ -498,25 +561,37 @@ void command_loop(char **paths)
 			continue;
 		}
 		save_command_history(line);
+
+		char *expanded = expand_segment(line);
+		free(line);
+		line = expanded;
+
 		bool has_pipe = false;
+		bool in_single = false, in_double = false;
 		for (int i = 0; line[i] != '\0'; i++) {
-			if (line[i] == '|') {
+			if (line[i] == '\'' && !in_double) in_single = !in_single;
+			else if (line[i] == '"' && !in_single) in_double = !in_double;
+			else if (line[i] == '|' && !in_single && !in_double) {
 				has_pipe = true;
 				break;
 			}
 		}
+
 		if (has_pipe) {
 			char ***pipe_args = pipe_argsplit(line);
 			status = execute_pipe(pipe_args);
-			while (*pipe_args != NULL) {
-				free(*pipe_args);
-				pipe_args++;
+
+			char ***tmp = pipe_args;
+			while (*tmp != NULL) {
+				free_args(*tmp);
+				tmp++;
 			}
+			free(pipe_args);
 		} else {
 			args = argsplit(line);
 			args = modifyargs(args);
 			status = execute(args, STDOUT_FILENO, OPT_FGJ);
-			free(args);
+			free_args(args);
 		}
 		free(line);
 	};
@@ -527,13 +602,22 @@ void quit_sig(int sig)
 	exit(EXIT_SUCCESS);
 }
 
+void cleanup_terminal(void)
+{
+	change_terminal_attribute(0);
+	printf("\033[?25h"); // show cursor
+	fflush(stdout);
+}
+
 int main(int argc, char **argv)
 {
 	// setup
+	atexit(cleanup_terminal);
 	signal(SIGINT, quit_sig);
 	signal(SIGTERM, quit_sig);
 	signal(SIGQUIT, quit_sig);
 	check_history_file();
+	check_aliases_file();
 	char **paths = setup_path_variable();
 	change_terminal_attribute(1); // turn off echoing and disabling getchar requires pressing enter key to return
 
