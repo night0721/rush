@@ -17,6 +17,7 @@
 #include "history.h"
 #include "commands.h"
 #include "alias.h"
+#include "git.h"
 
 void *memalloc(size_t size)
 {
@@ -551,8 +552,14 @@ void command_loop(char **paths)
 		cwd[j] = '\0';
 
 		/* Blue time string, pink time, teal arrow */
-		char prompt[128];
-		snprintf(prompt, 128, "\033[34m%s\033[m \033[35m[%s] \033[36m>\033[m ", timestr, cwd);
+		char *git_info = get_git_info();
+		char git_str[128];
+		if (git_info != NULL) {
+			snprintf(git_str, sizeof(git_str), "\033[31m[%s]", git_info);
+			free(git_info);
+		}
+		char prompt[256];
+		snprintf(prompt, sizeof(prompt), "\033[34m%s \033[35m[%s] %s \033[36m> ", timestr, cwd, git_str);
 
 		cmd_count = 0; // upward arrow key resets command count
 		line = readline(paths, prompt);

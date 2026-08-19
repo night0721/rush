@@ -19,6 +19,7 @@ Minimalist, customizable shell written in C99 with syntax highlighting and no de
 - Background jobs
 - Underline file path if it exists in system
 - Aliases
+- Git integration
 
 ## Built in commands
 - cd
@@ -32,7 +33,6 @@ Minimalist, customizable shell written in C99 with syntax highlighting and no de
 
 ## Todo Features
 - Tab completion
-- Git integration
 - Allow arguments with space in double quotes
 
 # Usage
