@@ -38,7 +38,7 @@ uninstall:
 	$(RM) $(DESTDIR)$(MANDIR)/$(MANPAGE)
 
 clean:
-	$(RM) $(TARGET) *.o
+	$(RM) $(TARGET) src/*.o
 
 all: $(TARGET)
 

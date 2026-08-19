@@ -106,7 +106,7 @@ int j(char **args)
         fprintf(stderr, "90s: not enough arguments\n");
         return -1;
     }
-    for (int i = 0; i < sizeof(shortcut_dirs) / sizeof(char *); i++) {
+    for (size_t i = 0; i < sizeof(shortcut_dirs) / sizeof(char *); i++) {
         int len = strlen(shortcut_dirs[i]);
         if (strncmp(args[1], shortcut_dirs[i], len) == 0) {
             char **merged_cd = memalloc(sizeof(char *) * 3);
@@ -151,6 +151,7 @@ int cd(char **args) {
  */
 int help(char **args)
 {
+	(void) args;
     printf("90s %f\n", VERSION);
     printf("Built in commands:\n");
 
@@ -165,12 +166,14 @@ int help(char **args)
 
 int quit(char **args)
 {
+	(void) args;
 	/* Exit prompt loop */
     return 0;
 }
 
 int history(char **args)
 {
+	(void) args;
     char **history = get_all_history(true);
 
     for (int i = 0; history[i] != NULL; ++i) {

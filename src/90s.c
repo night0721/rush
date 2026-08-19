@@ -142,7 +142,7 @@ int prompt_visible_length(const char *str)
 	return len;
 }
 
-void highlight(char *buffer, char **paths)
+void highlight(const char *buffer, char **paths)
 {
 	char *cmd_part = strchr(buffer, ' ');
 	size_t cmd_len = cmd_part ? (size_t)(cmd_part - buffer) : strlen(buffer);
@@ -159,7 +159,7 @@ void highlight(char *buffer, char **paths)
 	printf("%s%s\x1b[37m", cmd_color, cmd);
 
 	/* Walk the rest token by token, underline each token that has existing path */
-	char *p = buffer + cmd_len;
+	const char *p = buffer + cmd_len;
 	while (*p) {
 		if (*p == ' ' || *p == '\t') {
 			putchar(*p);
@@ -168,7 +168,7 @@ void highlight(char *buffer, char **paths)
 		}
 
 		/* Find end of token (next whitespace) */
-		char *start = p;
+		const char *start = p;
 		while (*p && *p != ' ' && *p != '\t')
 			p++;
 		int tok_len = (int)(p - start);
@@ -258,13 +258,13 @@ void render(const char *prompt, const char *buffer, int cursor_pos,
 
 char *readline(char **paths, const char *prompt)
 {
-	int bufsize = RL_BUFSIZE;
+	size_t bufsize = RL_BUFSIZE;
 	int position = 0;
 	char *buffer = memalloc(bufsize);
 	buffer[0] = '\0';
 
 	int prev_lines = 1;
-	int prompt_len = prompt_visible_length(prompt);
+	// int prompt_len = prompt_visible_length(prompt);
 
 	printf("%s", prompt);
 	fflush(stdout);
@@ -597,7 +597,7 @@ void command_loop(char **paths)
 		} else {
 			args = argsplit(line);
 			args = modifyargs(args);
-			status = execute(args, STDOUT_FILENO, OPT_FGJ);
+			status = launch(args, STDOUT_FILENO, OPT_FGJ);
 			free_args(args);
 		}
 		free(line);
@@ -606,6 +606,7 @@ void command_loop(char **paths)
 
 void quit_sig(int sig)
 {
+	(void) sig;
 	exit(EXIT_SUCCESS);
 }
 
@@ -618,6 +619,8 @@ void cleanup_terminal(void)
 
 int main(int argc, char **argv)
 {
+	(void) argc;
+	(void) argv;
 	// setup
 	atexit(cleanup_terminal);
 	signal(SIGINT, quit_sig);
